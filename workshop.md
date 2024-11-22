@@ -176,7 +176,11 @@ void shouldCreateOrderSuccessfully(AssertablePublishedEvents events) throws Exce
 }
 ```
 
-10. Publish event and verify the expected behaviour.
+Check the `event_publication` table for the event processing history.
+
+Explain external event publication support.
+
+10. Publish event and verify the expected behavior.
 
 In `InventoryIntegrationTests`, update `handleOrderCreatedEvent()` test as follows:
 
