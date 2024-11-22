@@ -67,7 +67,17 @@ class ModularityTests {
 }
 ```
 
-Now you should see the failure and in the console you can see all the violations of modular structure.
+Now the test will fail, and you can see all the violations of modular structure in the console.
+
+```shell
+- Module 'catalog' depends on non-exposed type com.sivalabs.bookstore.common.models.PagedResult within module 'common'!
+
+- Module 'webapp' depends on non-exposed type com.sivalabs.bookstore.orders.domain.models.Customer within module 'orders'!
+
+- Module 'inventory' depends on non-exposed type com.sivalabs.bookstore.orders.domain.events.OrderCreatedEvent within module 'orders'!
+
+- Module 'notifications' depends on non-exposed type com.sivalabs.bookstore.orders.domain.events.OrderCreatedEvent within module 'orders'!
+```
 
 Let's fix them.
 
@@ -102,7 +112,19 @@ package com.sivalabs.bookstore.orders.domain.events;
 import org.springframework.modulith.NamedInterface;
 ```
 
-5. Explicitly specify/restrict module dependencies.
+Run `ModularityTests` and the test should PASS.
+
+5. Try to access another module's internal component.
+
+Autowire `ProductRepository` in `OrderServiceImpl`.
+
+Run `ModularityTests` and the test should FAIL with the following error:
+
+```shell
+- Module 'orders' depends on non-exposed type com.sivalabs.bookstore.catalog.domain.ProductRepository within module 'catalog'!
+```
+
+6. Explicitly specify/restrict module dependencies.
 
 Add `package-info.java` in `com.sivalabs.bookstore.orders` package with the following content:
 
@@ -113,19 +135,22 @@ package com.sivalabs.bookstore.orders;
 import org.springframework.modulith.ApplicationModule;
 ```
 
-6. Try to access other module's internal component.
-
-Autowire `ProductRepository` in `OrderServiceImpl`.
-
-Run `ModularityTests` and the test should fail.
-
 7. Try to create circular-dependency between two modules.
 
 Make `InventoryService` as a `public` class and autowire in `OrderServiceImpl`.
 
-Run `ModularityTests` and the test should fail.
+Run `ModularityTests` and the test should FAIL with the following error:
+
+```shell
+Cycle detected: Slice inventory -> 
+                Slice orders -> 
+                Slice inventory
+```
 
 8. Testing modules independently using `@ApplicationModuleTest`
+
+Replace `@SpringBootTest` with `@ApplicationModuleTest`
+in `ProductRestControllerTests`, `InventoryIntegrationTests`, `OrderRestControllerTests`.
 
 9. Verify event published or not.
 
@@ -190,3 +215,5 @@ class ModularityTests {
     }
 }
 ```
+
+The C4 Model documentation is generated under `target/spring-modulith-docs` directory.
