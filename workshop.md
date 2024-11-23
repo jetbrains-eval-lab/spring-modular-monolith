@@ -5,51 +5,65 @@
 * Docker and Docker Compose
 * Your favourite IDE (Recommended: [IntelliJ IDEA](https://www.jetbrains.com/idea/))
 
+Pulling docker images may take some time, so it's better to pull them before workshop begin.
+
+```shell
+$ docker pull postgres:17-alpine
+$ docker pull rabbitmq:4.0.3-management
+$ docker pull rabbitmq:4.0.3-alpine
+$ docker pull openzipkin/zipkin:3.4.2
+```
+
 ## Project Local Setup
 
 ```shell
 $ git clone https://github.com/sivaprasadreddy/spring-modular-monolith.git
-$ git chechout workshop
+$ git checkout workshop
 $ ./mvnw clean verify
 ```
 
 ## Exercises
 
-1. Make sure the following `spring-modulith` dependencies are added to `pom.xml`.
+**1. Make sure the following `spring-modulith` dependencies are added to `pom.xml`.**
+
+For convenience, these dependencies are already added.
 
 ```xml
-<dependency>
-    <groupId>org.springframework.modulith</groupId>
-    <artifactId>spring-modulith-starter-core</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.modulith</groupId>
-    <artifactId>spring-modulith-starter-jdbc</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.modulith</groupId>
-    <artifactId>spring-modulith-events-amqp</artifactId>
-    <scope>runtime</scope>
-</dependency>
-<dependency>
-    <groupId>org.springframework.modulith</groupId>
-    <artifactId>spring-modulith-actuator</artifactId>
-    <scope>runtime</scope>
-</dependency>
-<dependency>
-    <groupId>org.springframework.modulith</groupId>
-    <artifactId>spring-modulith-observability</artifactId>
-    <scope>runtime</scope>
-</dependency>
-
-<dependency>
-    <groupId>org.springframework.modulith</groupId>
-    <artifactId>spring-modulith-starter-test</artifactId>
-    <scope>test</scope>
-</dependency>
+<dependencies>
+    <!-- other dependencies -->
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-starter-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-events-amqp</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-actuator</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-observability</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
 ```
 
-2. Create a test that verifies modularity.
+**2. Create a test that verifies modularity.**
 
 ```java
 package com.sivalabs.bookstore;
@@ -67,7 +81,8 @@ class ModularityTests {
 }
 ```
 
-Now the test will fail, and you can see all the violations of modular structure in the console.
+Now run this test, and it will fail. 
+You can see all the violations of modular structure in the console output.
 
 ```shell
 - Module 'catalog' depends on non-exposed type com.sivalabs.bookstore.common.models.PagedResult within module 'common'!
@@ -81,7 +96,7 @@ Now the test will fail, and you can see all the violations of modular structure 
 
 Let's fix them.
 
-3. Make `common` module `OPEN` type module.
+**3. Make `common` module `OPEN` type module.**
 
 Add `package-info.java` in `com.sivalabs.bookstore.common` package with the following content:
 
@@ -92,7 +107,7 @@ package com.sivalabs.bookstore.common;
 import org.springframework.modulith.ApplicationModule;
 ```
 
-4. Expose `com.sivalabs.bookstore.orders.domain.models` and `com.sivalabs.bookstore.orders.domain.events` packages as named-interfaces.
+**4. Expose `com.sivalabs.bookstore.orders.domain.models` and `com.sivalabs.bookstore.orders.domain.events` packages as named-interfaces.**
 
 Add `package-info.java` in `com.sivalabs.bookstore.orders.domain.models` package with the following content:
 
@@ -114,7 +129,7 @@ import org.springframework.modulith.NamedInterface;
 
 Run `ModularityTests` and the test should PASS.
 
-5. Try to access another module's internal component.
+**5. Try to access another module's internal component.**
 
 Autowire `ProductRepository` in `OrderServiceImpl`.
 
@@ -124,7 +139,7 @@ Run `ModularityTests` and the test should FAIL with the following error:
 - Module 'orders' depends on non-exposed type com.sivalabs.bookstore.catalog.domain.ProductRepository within module 'catalog'!
 ```
 
-6. Explicitly specify/restrict module dependencies.
+**6. Explicitly specify/restrict module dependencies.**
 
 Add `package-info.java` in `com.sivalabs.bookstore.orders` package with the following content:
 
@@ -135,7 +150,7 @@ package com.sivalabs.bookstore.orders;
 import org.springframework.modulith.ApplicationModule;
 ```
 
-7. Try to create circular-dependency between two modules.
+**7. Try to create circular-dependency between two modules.**
 
 Make `InventoryService` as a `public` class and autowire in `OrderServiceImpl`.
 
@@ -147,12 +162,12 @@ Cycle detected: Slice inventory ->
                 Slice inventory
 ```
 
-8. Testing modules independently using `@ApplicationModuleTest`
+**8. Testing modules independently using `@ApplicationModuleTest`**
 
 Replace `@SpringBootTest` with `@ApplicationModuleTest`
 in `ProductRestControllerTests`, `InventoryIntegrationTests`, `OrderRestControllerTests`.
 
-9. Verify event published or not.
+**9. Verify event published or not.**
 
 In `OrderRestControllerTests`, update `shouldCreateOrderSuccessfully()` test as follows:
 
@@ -180,7 +195,7 @@ Check the `event_publication` table for the event processing history.
 
 Explain external event publication support.
 
-10. Publish event and verify the expected behavior.
+**10. Publish event and verify the expected behavior.**
 
 In `InventoryIntegrationTests`, update `handleOrderCreatedEvent()` test as follows:
 
@@ -194,7 +209,7 @@ void handleOrderCreatedEvent(Scenario scenario) {
 }
 ```
 
-11. Create C4 Model Documentation
+**11. Create C4 Model Documentation**
 
 In `ModularityTests.java` add the `createModuleDocumentation()` test.
 
