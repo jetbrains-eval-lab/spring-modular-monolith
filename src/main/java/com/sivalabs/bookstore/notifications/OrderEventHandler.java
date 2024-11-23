@@ -1,4 +1,4 @@
-package com.sivalabs.bookstore.notifications.orders;
+package com.sivalabs.bookstore.notifications;
 
 import com.sivalabs.bookstore.orders.domain.events.OrderCreatedEvent;
 import org.slf4j.Logger;
@@ -13,5 +13,6 @@ class OrderEventHandler {
     @ApplicationModuleListener
     void handle(OrderCreatedEvent event) {
         log.info("[Notification]: Received order created event: {}", event);
+        // send email notification
     }
 }
